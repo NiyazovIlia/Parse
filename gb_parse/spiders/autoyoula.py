@@ -22,11 +22,7 @@ class AutoyoulaSpider(scrapy.Spider):
 
     data_query = {
         "title": lambda resp: resp.css("div.AdvertCard_advertTitle__1S1Ak::text").get(),
-        'img': lambda resp: resp.css(
-            'figure.PhotoGallery_photo__36e_r img.PhotoGallery_photoImage__2mHGn').attrib.get('src'),
         "price": lambda resp: float(resp.css('div.AdvertCard_price__3dDCr::text').get().replace("\u2009", '')),
-        'description': (lambda resp: resp.css('div.AdvertSpecs_data__xK2Qx a.blackLink::text').get()) or
-                       (lambda resp: resp.css('div.AdvertSpecs_data__xK2Qx::text').get()),
         # 'author':
     }
 
@@ -45,11 +41,35 @@ class AutoyoulaSpider(scrapy.Spider):
         yield from self.gen_task(response, ads_links, self.ads_parse)
 
     def ads_parse(self, response):
-        # response - ссылка
         data = {}
+        print(response.url)
         for key, selector in self.data_query.items():
             try:
                 data[key] = selector(response)
             except (ValueError, AttributeError):
                 continue
+        self.description_parse(response.url, data)
+        self.img_parse(response.url, data)
         self.db_client['gb_parse_youla'][self.name].insert_one(data)
+
+    def description_parse(self, url, data):
+        response = requests.get(url)
+        soup = bs4.BeautifulSoup(response.text, 'lxml')
+        description = soup.find_all('div', attrs={'class': 'AdvertSpecs_row__ljPcX'})
+        for i in description:
+            description_1 = i.find('div', attrs={'class': 'AdvertSpecs_label__2JHnS'}).text
+            description_2 = i.find('div', attrs={'class': 'AdvertSpecs_data__xK2Qx'}).text
+            data[description_1] = description_2
+        return data
+
+    def img_parse(self, url, data):
+        array = []
+        response = requests.get(url)
+        soup = bs4.BeautifulSoup(response.text, 'lxml')
+        a = soup.find('div', attrs={'class': 'PhotoGallery_photoWrapper__3m7yM'})
+        for i in a:
+            b = i.find_all('img', attrs={'class': 'PhotoGallery_photoImage__2mHGn'})
+            for j in b:
+                array.append(j['src'])
+            data['img'] = array
+        return data
