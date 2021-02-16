@@ -13,16 +13,6 @@ class GbParseItem(scrapy.Item):
     pass
 
 
-class AutoyoulaItem(scrapy.Item):
-    _id = scrapy.Field()
-    url = scrapy.Field()
-    title = scrapy.Field()
-    images = scrapy.Field()
-    description = scrapy.Field()
-    author = scrapy.Field()
-    specification = scrapy.Field()
-    price = scrapy.Field()
-
 
 class Insta(scrapy.Item):
     _id = scrapy.Field()

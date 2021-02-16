@@ -56,8 +56,16 @@ class InstagramSpider(scrapy.Spider):
                 callback=self.user_api_parse,
             )
 
+            url_2 = f'{self.api_url}?query_hash={self.query_hash["following"]}&variables={json.dumps(variables)}'
+            yield response.follow(
+                url_2,
+                callback=self.user_api_parse_2,
+            )
+
     def user_api_parse(self, response):
         yield from self.get_user_followers(response.json(), response)
+
+    def user_api_parse_2(self, response):
         yield from self.get_user_following(response.json(), response)
 
     def get_user(self, tag):
@@ -81,13 +89,13 @@ class InstagramSpider(scrapy.Spider):
         yield from self.get_post_follows(tag['data']['user']['edge_followed_by']["edges"])
 
     def get_user_following(self, tag, response):
-        url = f'{self.api_url}?query_hash={self.query_hash["following"]}&variables={self.get_user(tag["data"]["user"]["edge_followed_by"])}'
+        url = f'{self.api_url}?query_hash={self.query_hash["following"]}&variables={self.get_user(tag["data"]["user"]["edge_follow"])}'
         yield response.follow(
             url,
             callback=self.user_api_parse,
         )
 
-        yield from self.get_post_following(tag['data']['user']['edge_followed_by']["edges"])
+        yield from self.get_post_following(tag['data']['user']['edge_follow']["edges"])
 
     @staticmethod
     def get_post_follows(edges):
