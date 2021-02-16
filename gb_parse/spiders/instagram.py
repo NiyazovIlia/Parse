@@ -92,7 +92,7 @@ class InstagramSpider(scrapy.Spider):
         url = f'{self.api_url}?query_hash={self.query_hash["following"]}&variables={self.get_user(tag["data"]["user"]["edge_follow"])}'
         yield response.follow(
             url,
-            callback=self.user_api_parse,
+            callback=self.user_api_parse_2,
         )
 
         yield from self.get_post_following(tag['data']['user']['edge_follow']["edges"])
